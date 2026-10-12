@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Llavero</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0a0e14">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#0a0e14;--bg2:#111720;--bg3:#1c2535;--border:#1e2d42;--fg:#e8edf5;--dim:#64748b;--accent:#00c896;--blue:#3b82f6;--red:#ef4444;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;-webkit-tap-highlight-color:transparent;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto}
+.header{padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-icon{font-size:22px;color:var(--dim);line-height:1}
+.hdr-mid{flex:1;min-width:0}
+.hdr-title{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.hdr-sub{display:flex;align-items:center;gap:5px;margin-top:2px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;transition:background .3s}
+.sdot.on{background:var(--accent)}
+.stxt{font-size:12px;color:var(--dim)}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.tab-panel{display:none;padding:14px 16px;padding-bottom:88px}
+.tab-panel.active{display:block}
+.conn-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;transition:border-color .2s,background .2s;user-select:none}
+.conn-card:active{background:var(--bg3)}
+.conn-card.on{border-color:var(--accent)}
+.avatar{width:50px;height:50px;background:var(--bg3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.conn-info{flex:1;min-width:0}
+.conn-name{font-size:16px;font-weight:700}
+.conn-hint{font-size:12px;color:var(--dim);margin-top:2px}
+.conn-arr{color:var(--dim);font-size:20px}
+.sync-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sync-ico{font-size:24px;color:var(--accent);flex-shrink:0}
+.sync-info{flex:1;min-width:0}
+.sync-lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.sync-val{font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums}
+.sync-ok{font-size:11px;color:var(--accent);margin-top:2px}
+.sync-btn{background:var(--bg3);border:1px solid var(--border);color:var(--fg);padding:8px 12px;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s}
+.sync-btn:active{background:var(--accent);color:#000;border-color:var(--accent)}
+.sync-btn:disabled{opacity:.35;cursor:default}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.sec-edit{font-size:12px;color:var(--blue);cursor:pointer;padding:2px 4px}
+.btn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.qbtn{border:none;border-radius:14px;padding:16px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-height:82px;color:#fff;font-family:inherit;position:relative;overflow:hidden;transition:transform .1s}
+.qbtn:active{transform:scale(.92)}
+.qbtn-ico{font-size:28px;line-height:1}
+.qbtn-lbl{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;text-align:center;line-height:1.2}
+.pdots{display:flex;justify-content:center;gap:6px;margin-bottom:16px}
+.pdot{height:5px;border-radius:3px;background:var(--border);transition:width .25s,background .25s;width:5px;cursor:pointer}
+.pdot.active{width:18px;background:var(--blue)}
+.cmd-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px}
+.cmd-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:26px;padding:7px 7px 7px 16px;transition:border-color .2s}
+.cmd-row:focus-within{border-color:var(--blue)}
+.cmd-inp{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--fg);font-size:15px;font-family:inherit;padding:5px 0}
+.cmd-inp::placeholder{color:var(--dim)}
+.cmd-send{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;color:#000;transition:transform .1s,background .15s}
+.cmd-send:active{transform:scale(.88);background:#00a07a}
+.cmd-send:disabled{background:var(--border);cursor:default}
+.btab-hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px}
+.btab-ttl{font-size:17px;font-weight:700}
+.add-fab{width:34px;height:34px;border-radius:50%;background:var(--accent);border:none;color:#000;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:transform .1s}
+.add-fab:active{transform:scale(.88)}
+.blist{display:flex;flex-direction:column;gap:6px}
+.bitem{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.bitem-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.bitem-info{flex:1;min-width:0}
+.bitem-name{font-weight:700;font-size:14px}
+.bitem-cmd{color:var(--dim);font-size:11px;margin-top:3px;font-family:'Courier New',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bitem-edit{color:var(--dim);font-size:22px;cursor:pointer;padding:4px;flex-shrink:0}
+.set-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:8px}
+.set-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.set-row{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);font-size:14px}
+.set-row:last-child{border-bottom:none}
+.set-val{color:var(--dim);font-size:12px;font-family:'Courier New',monospace}
+.set-note{font-size:12px;color:var(--dim);background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;line-height:1.7}
+.set-note strong{color:var(--fg)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border-radius:22px 22px 0 0;padding:20px 20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.4,1)}
+.overlay.open .modal{transform:translateY(0)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.m-cancel{color:var(--dim);cursor:pointer;font-size:14px;padding:4px}
+.m-ttl{font-size:17px;font-weight:700}
+.m-save{color:var(--accent);font-weight:700;cursor:pointer;font-size:14px;padding:4px}
+.fgrp{margin-bottom:18px}
+.flbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.fcnt{color:var(--border)}
+.finp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:13px 14px;color:var(--fg);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
+.finp:focus{border-color:var(--blue)}
+.ico-grid{display:flex;flex-wrap:wrap;gap:7px}
+.ico-opt{width:46px;height:46px;border-radius:11px;background:var(--bg3);border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:border-color .15s,transform .1s;user-select:none}
+.ico-opt:active{transform:scale(.85)}
+.ico-opt.sel{border-color:var(--blue)}
+.col-grid{display:flex;gap:10px;flex-wrap:wrap}
+.col-opt{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:transform .15s;outline:2px solid transparent;outline-offset:2px}
+.col-opt.sel{outline-color:var(--fg);transform:scale(1.18)}
+.del-btn{width:100%;padding:14px;margin-top:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;color:var(--red);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.del-btn:active{background:rgba(239,68,68,.2)}
+.tab-bar{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;cursor:pointer;color:var(--dim);gap:3px;transition:color .15s;user-select:none}
+.tab-item.active{color:var(--blue)}
+.ti-ico{font-size:22px;line-height:1}
+.ti-lbl{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--border);color:var(--fg);padding:10px 20px;border-radius:22px;font-size:13px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty-hint{color:var(--dim);text-align:center;padding:24px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <span class="hdr-icon">☰</span>
+    <div class="hdr-mid">
+      <div class="hdr-title">Llavero</div>
+      <div class="hdr-sub">
+        <div class="sdot" id="sdot"></div>
+        <span class="stxt" id="stxt">Desconectado</span>
+      </div>
+    </div>
+    <span class="hdr-icon">⚙</span>
+  </div>
+  <div class="content">
+    <div class="tab-panel active" id="tab-principal">
+      <div class="conn-card" id="connCard" onclick="toggleConnect()">
+        <div class="avatar">🤖</div>
+        <div class="conn-info">
+          <div class="conn-name">Llavero</div>
+          <div class="conn-hint" id="connHint">Toca para conectar</div>
+        </div>
+        <span class="conn-arr">›</span>
+      </div>
+      <div class="sync-card">
+        <span class="sync-ico">🕐</span>
+        <div class="sync-info">
+          <div class="sync-lbl">Última sincronización</div>
+          <div class="sync-val" id="syncVal">Sin sincronizar</div>
+          <div class="sync-ok" id="syncOk"></div>
+        </div>
+        <button class="sync-btn" id="syncBtn" onclick="syncTime()" disabled>Sincronizar</button>
+      </div>
+      <div class="sec-hdr">
+        <span class="sec-ttl">Acciones rápidas</span>
+        <span class="sec-edit" onclick="switchTab('botones')">Editar ✏</span>
+      </div>
+      <div class="btn-grid" id="btnGrid"></div>
+      <div class="pdots" id="pdots"></div>
+      <div class="cmd-lbl">Enviar comando</div>
+      <div class="cmd-row">
+        <input class="cmd-inp" id="cmdInp" type="text" placeholder="Escribe tu mensaje…"
+               autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button class="cmd-send" id="cmdSend" onclick="sendCmd()" disabled>➤</button>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-botones">
+      <div class="btab-hdr">
+        <span class="btab-ttl">Botones</span>
+        <button class="add-fab" onclick="openModal(null)">+</button>
+      </div>
+      <div class="blist" id="blist"></div>
+    </div>
+    <div class="tab-panel" id="tab-ajustes">
+      <div class="set-lbl">Dispositivo BLE</div>
+      <div class="set-card">
+        <div class="set-row"><span>Nombre</span><span class="set-val">Llavero</span></div>
+        <div class="set-row"><span>Perfil</span><span class="set-val">Nordic UART</span></div>
+        <div class="set-row"><span>Audio</span><span class="set-val">PWM 8 kHz</span></div>
+      </div>
+      <div class="set-lbl">Comandos disponibles</div>
+      <div class="set-card">
+        <div class="set-row"><span>Perro + audio</span><span class="set-val">CALLATE</span></div>
+        <div class="set-row"><span>Hora manual</span><span class="set-val">TIME:HH:MM:SS</span></div>
+        <div class="set-row"><span>Reproducir</span><span class="set-val">PLAY:NOMBRE</span></div>
+        <div class="set-row"><span>Detener</span><span class="set-val">STOP</span></div>
+      </div>
+      <div class="set-lbl">Compatibilidad</div>
+      <div class="set-note">
+        Esta app usa <strong>Web Bluetooth</strong>. Funciona en <strong>Chrome para Android</strong>.<br>
+        No funciona en Safari ni en iOS.<br><br>
+        Para instalar: en Chrome toca <strong>⋮ → Agregar a pantalla de inicio</strong>.
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <div class="tab-item active" id="ti-principal" onclick="switchTab('principal')">
+      <span class="ti-ico">⊞</span><span class="ti-lbl">Principal</span>
+    </div>
+    <div class="tab-item" id="ti-botones" onclick="switchTab('botones')">
+      <span class="ti-ico">☰</span><span class="ti-lbl">Botones</span>
+    </div>
+    <div class="tab-item" id="ti-ajustes" onclick="switchTab('ajustes')">
+      <span class="ti-ico">⚙</span><span class="ti-lbl">Ajustes</span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="overlayBg(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="m-cancel" onclick="closeModal()">Cancelar</span>
+      <span class="m-ttl" id="mTtl">Nuevo botón</span>
+      <span class="m-save" onclick="saveModal()">Guardar</span>
+    </div>
+    <div class="fgrp">
+      <div class="flbl"><span>Nombre</span><span class="fcnt"><span id="nc">0</span>/15</span></div>
+      <input class="finp" id="fName" type="text" maxlength="15" placeholder="CALLATE"
+             oninput="document.getElementById('nc').textContent=this.value.length">
+    </div>
+    <div class="fgrp">
+      <div class="flbl"><span>Comando</span><span class="fcnt"><span id="cc">0</span>/32</span></div>
+      <input class="finp" id="fCmd" type="text" maxlength="32" placeholder="CALLATE"
+             oninput="document.getElementById('cc').textContent=this.value.length;this.value=this.value.toUpperCase()">
+    </div>
+    <div class="fgrp">
+      <div class="flbl"><span>Ícono</span></div>
+      <div class="ico-grid" id="icoGrid"></div>
+    </div>
+    <div class="fgrp">
+      <div class="flbl"><span>Color</span></div>
+      <div class="col-grid" id="colGrid"></div>
+    </div>
+    <button class="del-btn" id="delBtn" onclick="deleteBtn()">Eliminar botón</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SVC='6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const ICONS=['🔊','📢','😄','😂','🎵','🎶','💡','🔔','🎮','⭐','🔇','🎤','🚨','🔥','⚡','🎯','🔑','🌙','☀️','❄️','🌊','💥','🎁','🔒','🔓','📱','🎪','🦜','👻','🤖'];
+const COLORS=['#7c3aed','#1d4ed8','#0f766e','#166534','#991b1b','#92400e','#b45309','#0369a1','#7e22ce','#be185d','#374151','#0c4a6e'];
+const DEFAULTS=[
+  {id:1,name:'CALLATE',cmd:'CALLATE',icon:'🔊',color:'#7c3aed'},
+  {id:2,name:'BROMA',cmd:'PLAY:BROMA',icon:'😄',color:'#92400e'},
+  {id:3,name:'MÚSICA',cmd:'PLAY:MUSICA',icon:'🎵',color:'#1d4ed8'},
+  {id:4,name:'LUCES ON',cmd:'SET:LUCES:ON',icon:'💡',color:'#166534'},
+  {id:5,name:'LUCES OFF',cmd:'SET:LUCES:OFF',icon:'🔦',color:'#991b1b'},
+  {id:6,name:'ALARMA',cmd:'PLAY:ALARMA',icon:'🔔',color:'#0f766e'},
+];
+let btDevice=null,rxChar=null,connected=false;
+let tab='principal',page=0,editId=null,selIco='🔊',selCol=COLORS[0];
+let buttons=[];
+function loadBtns(){try{const s=localStorage.getItem('lv_btns');return s?JSON.parse(s):DEFAULTS.map(b=>({...b}))}catch{return DEFAULTS.map(b=>({...b}))}}
+function saveBtns(){try{localStorage.setItem('lv_btns',JSON.stringify(buttons))}catch{}}
+buttons=loadBtns();
+function switchTab(name){tab=name;document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');document.getElementById('ti-'+name).classList.add('active');if(name==='botones')renderList()}
+const PER=6;
+function renderGrid(){const g=document.getElementById('btnGrid');const d=document.getElementById('pdots');const pages=Math.max(1,Math.ceil(buttons.length/PER));if(page>=pages)page=pages-1;const slice=buttons.slice(page*PER,(page+1)*PER);g.innerHTML=slice.map((b,i)=>`<button class="qbtn" style="background:${b.color}" onclick="qsend(${page*PER+i})"><span class="qbtn-ico">${b.icon}</span><span class="qbtn-lbl">${b.name}</span></button>`).join('');d.innerHTML=pages>1?Array.from({length:pages},(_,i)=>`<div class="pdot${i===page?' active':''}" onclick="goPage(${i})"></div>`).join(''):''}
+function goPage(n){page=n;renderGrid()}
+function qsend(idx){if(buttons[idx])send(buttons[idx].cmd)}
+function renderList(){const el=document.getElementById('blist');if(!buttons.length){el.innerHTML='<div class="empty-hint">Sin botones. Toca + para agregar.</div>';return}el.innerHTML=buttons.map(b=>`<div class="bitem"><div class="bitem-ico" style="background:${b.color}">${b.icon}</div><div class="bitem-info"><div class="bitem-name">${b.name}</div><div class="bitem-cmd">${b.cmd}</div></div><span class="bitem-edit" onclick="openModal(${b.id})">›</span></div>`).join('')}
+function buildPickers(){document.getElementById('icoGrid').innerHTML=ICONS.map(ic=>`<div class="ico-opt${ic===selIco?' sel':''}" onclick="pickIco(this,'${ic}')">${ic}</div>`).join('');document.getElementById('colGrid').innerHTML=COLORS.map(c=>`<div class="col-opt${c===selCol?' sel':''}" style="background:${c}" data-c="${c}" onclick="pickCol(this,'${c}')"></div>`).join('')}
+function pickIco(el,ic){selIco=ic;document.querySelectorAll('.ico-opt').forEach(e=>e.classList.toggle('sel',e===el))}
+function pickCol(el,c){selCol=c;document.querySelectorAll('.col-opt').forEach(e=>e.classList.toggle('sel',e===el))}
+function openModal(id){editId=id;const b=id?buttons.find(x=>x.id===id):null;selIco=b?b.icon:'🔊';selCol=b?b.color:COLORS[0];document.getElementById('mTtl').textContent=b?'Editar botón':'Nuevo botón';document.getElementById('fName').value=b?b.name:'';document.getElementById('fCmd').value=b?b.cmd:'';document.getElementById('nc').textContent=b?b.name.length:0;document.getElementById('cc').textContent=b?b.cmd.length:0;document.getElementById('delBtn').style.display=b?'block':'none';buildPickers();document.getElementById('overlay').classList.add('open');setTimeout(()=>document.getElementById('fName').focus(),320)}
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+function overlayBg(e){if(e.target===document.getElementById('overlay'))closeModal()}
+function saveModal(){const name=document.getElementById('fName').value.trim().toUpperCase();const cmd=document.getElementById('fCmd').value.trim().toUpperCase();if(!name||!cmd){showToast('Completa nombre y comando');return}if(editId){const b=buttons.find(x=>x.id===editId);if(b){b.name=name;b.cmd=cmd;b.icon=selIco;b.color=selCol}}else buttons.push({id:Date.now(),name,cmd,icon:selIco,color:selCol});saveBtns();renderGrid();renderList();closeModal();showToast(editId?'Botón actualizado ✓':'Botón agregado ✓')}
+function deleteBtn(){if(!editId)return;buttons=buttons.filter(b=>b.id!==editId);saveBtns();renderGrid();renderList();closeModal();showToast('Botón eliminado')}
+async function toggleConnect(){connected?disconnect():await connect()}
+async function connect(){if(!navigator.bluetooth){showToast('Web Bluetooth solo en Chrome Android');return}try{setStatus('connecting');btDevice=await navigator.bluetooth.requestDevice({filters:[{name:'Llavero'}],optionalServices:[SVC]});btDevice.addEventListener('gattserverdisconnected',onDisc);const srv=await btDevice.gatt.connect();const svc=await srv.getPrimaryService(SVC);rxChar=await svc.getCharacteristic(RX);try{const tx=await svc.getCharacteristic(TX);await tx.startNotifications()}catch{}setStatus('connected');await syncTime();showToast('Conectado ✓')}catch(e){setStatus('disconnected');if(e.name!=='NotFoundError')showToast('Error: '+e.message)}}
+function disconnect(){if(btDevice&&btDevice.gatt.connected)btDevice.gatt.disconnect();onDisc()}
+function onDisc(){btDevice=null;rxChar=null;setStatus('disconnected');showToast('Desconectado')}
+function setStatus(s){connected=s==='connected';const dot=document.getElementById('sdot');const txt=document.getElementById('stxt');const hint=document.getElementById('connHint');const card=document.getElementById('connCard');const sb=document.getElementById('syncBtn');const cs=document.getElementById('cmdSend');if(s==='connected'){dot.classList.add('on');txt.textContent='Conectado';hint.textContent='Toca para desconectar';card.classList.add('on');sb.disabled=false;cs.disabled=false}else if(s==='connecting'){dot.classList.remove('on');txt.textContent='Conectando…';hint.textContent='Buscando Llavero…';card.classList.remove('on')}else{dot.classList.remove('on');txt.textContent='Desconectado';hint.textContent='Toca para conectar';card.classList.remove('on');sb.disabled=true;cs.disabled=true}}
+async function send(text){if(!rxChar){showToast('Sin conexión');return}try{await rxChar.writeValue(new TextEncoder().encode(text+'\n'))}catch{showToast('Error al enviar')}}
+async function syncTime(){const n=new Date();const p=v=>String(v).padStart(2,'0');await send(`TIME:${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`);const h=n.getHours();const ampm=h>=12?'PM':'AM';const h12=h%12||12;document.getElementById('syncVal').textContent=`${p(n.getDate())}/${p(n.getMonth()+1)}/${n.getFullYear()} ${p(h12)}:${p(n.getMinutes())}:${p(n.getSeconds())} ${ampm}`;document.getElementById('syncOk').textContent='✓ Sincronizado al conectar'}
+function sendCmd(){const inp=document.getElementById('cmdInp');const v=inp.value.trim().toUpperCase();if(!v)return;send(v);inp.value='';inp.focus()}
+document.getElementById('cmdInp').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendCmd()}});
+let tt;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600)}
+renderGrid();
+</script>
+</body>
+</html>
